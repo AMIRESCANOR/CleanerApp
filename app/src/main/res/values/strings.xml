@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Cleaner Pro</string>
+    <string name="app_description">Nettoyez votre telephone en un clic</string>
+    <string name="clean_button">NETTOYER MAINTENANT</string>
+    <string name="cleaning">Nettoyage en cours...</string>
+    <string name="cleaning_done">Nettoyage termine !</string>
+    <string name="total_storage">Espace Total</string>
+    <string name="used_storage">Utilise</string>
+    <string name="free_storage">Libre</string>
+    <string name="cache_cleaned">Cache Nettoye</string>
+    <string name="ram_freed">RAM Liberee</string>
+    <string name="total_freed">Total Libere</string>
+    <string name="info_title">Informations</string>
+</resources>
