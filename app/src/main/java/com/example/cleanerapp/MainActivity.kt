@@ -6,7 +6,7 @@ import android.os.Build
 import android.os.Environment
 import android.os.StatFs
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -395,31 +395,33 @@ fun cleanTempFiles(context: Context): Long {
 }
 
 fun freeRam(context: Context): Long {
-    val runtime = Runtime.getRuntime()
-    val maxMemory = runtime.maxMemory()
-
-    System.gc()
-    System.runFinalization()
-
     val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-    val runningApps = activityManager.runningAppProcesses
-    val myPid = android.os.Process.myPid()
+    val before = ActivityManager.MemoryInfo()
+    activityManager.getMemoryInfo(before)
 
-    var freedRam = 0L
-    if (runningApps != null) {
-        for (app in runningApps) {
-            if (app.pid != myPid && app.importance > ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
-                try {
-                    android.os.Process.killProcess(app.pid)
-                    freedRam += (maxMemory / runningApps.size)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+    val myPackage = context.packageName
+    val packages = context.packageManager.getInstalledApplications(0)
+    for (app in packages) {
+        if (app.packageName != myPackage) {
+            try {
+                activityManager.killBackgroundProcesses(app.packageName)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
 
-    return freedRam
+    System.gc()
+    try {
+        Thread.sleep(1500)
+    } catch (e: InterruptedException) {
+        e.printStackTrace()
+    }
+
+    val after = ActivityManager.MemoryInfo()
+    activityManager.getMemoryInfo(after)
+    val freed = after.availMem - before.availMem
+    return if (freed > 0) freed else 0L
 }
 
 fun deleteDir(dir: File?): Long {
@@ -432,8 +434,11 @@ fun deleteDir(dir: File?): Long {
             }
         }
     }
-    if (dir != null && dir.delete()) {
-        size += dir.length()
+    if (dir != null) {
+        val fileSize = if (dir.isFile) dir.length() else 0L
+        if (dir.delete()) {
+            size += fileSize
+        }
     }
     return size
 }
